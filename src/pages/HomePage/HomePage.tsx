@@ -1,166 +1,110 @@
-import { Layout, Divider } from "antd";
-import Introduction from "./Introduction";
-import Ready4AIPrograms from "./Ready4AIPrograms";
-import AchievementSection from "./Achievement";
-import SchoolTour from "./SchoolTour";
-import Activities from "./Activities";
-// import Discussion from './Discussion';
-import Network from "./Network";
-import HeaderDevplus from "./HeaderDevplus";
-import FooterDevplus from "./FooterDevplus";
-import "./homepage.css";
-import Speaker from "./Speaker";
-import { useEffect, useRef, useState } from "react";
-// import Ready4AI from "./Ready4AI";
-import Target from "./Target";
+import { Layout } from "antd";
+import { useEffect, useState } from "react";
 
+import HeaderDevplus from "./HeaderDevplus";
+import "./homepage.css";
+
+// ==== Sections / Components ====
+import Ready4AIHero from "../components/Ready4AIHero";
+import ActivitiesSection from "../components/ActivitiesSection";
+import Seminar from "../components/Seminar";
+import ExpoBoothExperience from "../components/ExpoBoothExperience";
+import Ready4AIFrame from "../components/Ready4AIFrame";
+import PartnersSection from "../components/PartnersSection";
+import SpeakerSection from "../components/SpeakerSection";
+import ClosingCTASection from "../components/ClosingCTASection";
+
+// Danh sách section id để highlight menu
 const sectionIds = [
   "introduction",
-  // 'target',
-  // 'ready4ai',
-  "schooltour",
   "activities",
   "learning",
   "achievement",
-  // 'discussion',
   "network",
   "speakers",
-];
+] as const;
 
 const HomePage = () => {
   const [activeSection, setActiveSection] = useState<string>(sectionIds[0]);
-  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    const observer = new window.IntersectionObserver(
+    const elements = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter(Boolean) as HTMLElement[];
+
+    if (elements.length === 0) return;
+
+    const observer = new IntersectionObserver(
       (entries) => {
-        const visible = entries.filter((e) => e.isIntersecting);
-        if (visible.length > 0) {
-          // Lấy section gần top nhất
-          const topMost = visible.reduce((prev, curr) =>
-            prev.boundingClientRect.top < curr.boundingClientRect.top
-              ? prev
-              : curr
-          );
-          setActiveSection(topMost.target.id);
+        const visibles = entries.filter((e) => e.isIntersecting);
+
+        if (visibles.length > 0) {
+          // lấy section gần đỉnh viewport nhất
+          const topMost = visibles.reduce((best, cur) => {
+            const bestTop = Math.abs(best.boundingClientRect.top);
+            const curTop = Math.abs(cur.boundingClientRect.top);
+            return curTop < bestTop ? cur : best;
+          });
+          const id = (topMost.target as HTMLElement).id;
+          if (id && id !== activeSection) setActiveSection(id);
+        } else {
+          // nếu đang ở top => ép về introduction
+          if (window.scrollY === 0) {
+            setActiveSection("introduction");
+          }
         }
       },
-      { threshold: 0.3 }
+      {
+        root: null,
+        rootMargin: "-96px 0px -55% 0px", // trừ chiều cao header ~96px
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      }
     );
-    sectionRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
+
+    elements.forEach((el) => observer.observe(el));
+
+    // set mặc định khi vừa load
+    if (window.scrollY === 0) {
+      setActiveSection("introduction");
+    }
+
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <Layout>
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-100 via-orange-50 to-white"></div>
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-gradient-to-br from-orange-300/40 to-orange-500/30 rounded-full blur-3xl backdrop-blur-3xl"></div>
-        <div className="absolute top-1/4 -right-24 w-80 h-80 bg-gradient-to-bl from-orange-400/35 to-orange-600/25 rounded-full blur-3xl backdrop-blur-3xl"></div>
-        <div className="absolute bottom-32 left-1/4 w-72 h-72 bg-gradient-to-tr from-orange-200/45 to-orange-300/35 rounded-full blur-2xl backdrop-blur-3xl"></div>
-
-        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gradient-to-r from-white/30 to-orange-100/40 rounded-full blur-2xl backdrop-blur-2xl transform -translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute top-3/4 right-1/3 w-48 h-48 bg-gradient-to-l from-orange-200/40 to-white/35 rounded-full blur-xl backdrop-blur-2xl"></div>
-
-        <div className="absolute top-20 left-3/4 w-32 h-32 bg-white/25 rounded-full blur-lg backdrop-blur-sm animate-pulse"></div>
-        <div className="absolute bottom-1/4 left-1/6 w-24 h-24 bg-orange-100/30 rounded-full blur-lg backdrop-blur-sm animate-pulse delay-1000"></div>
-      </div>
-
       <div className="!z-99">
         <HeaderDevplus activeSection={activeSection} />
-        <div
-          id="introduction"
-          ref={(el) => {
-            sectionRefs.current[0] = el;
-          }}
-          className="scroll-mt-24"
-        >
-          <Introduction />
-          <Target />
-        </div>
-        {/* <div
-          id="ready4ai"
-          ref={(el) => {
-            sectionRefs.current[1] = el;
-          }}
-          className="scroll-mt-16"
-        >
-          <Ready4AI />
-        </div> */}
-        <div
-          id="schooltour"
-          ref={(el) => {
-            sectionRefs.current[1] = el;
-          }}
-          className="scroll-mt-16"
-        >
-          <SchoolTour />
-        </div>
-        <div className="flex justify-center bg-[#faf0e4] p-10">
-          <Divider
-            className="!w-[600px] !min-w-0 !border-[#ff6900] !border-2 rounded-full !m-0"
-            orientation="center"
-            plain
-          ></Divider>
-        </div>
-        <div
-          id="schooltour"
-          ref={(el) => {
-            sectionRefs.current[2] = el;
-          }}
-          className="scroll-mt-16"
-        >
-          <Activities />
-        </div>
-        <div
-          id="learning"
-          ref={(el) => {
-            sectionRefs.current[3] = el;
-          }}
-          className="scroll-mt-16"
-        >
-          <Ready4AIPrograms />
-        </div>
-        <div
-          id="achievement"
-          ref={(el) => {
-            sectionRefs.current[4] = el;
-          }}
-          className="scroll-mt-16"
-        >
-          <AchievementSection />
-        </div>
-        <div
-          id="discussion"
-          ref={(el) => {
-            sectionRefs.current[5] = el;
-          }}
-          className="scroll-mt-16"
-        >
-          {/* <Discussion /> */}
-        </div>
-        <div
-          id="network"
-          ref={(el) => {
-            sectionRefs.current[6] = el;
-          }}
-          className="scroll-mt-16"
-        >
-          <Network />
-        </div>
-        <div
-          id="speakers"
-          ref={(el) => {
-            sectionRefs.current[7] = el;
-          }}
-          className="scroll-mt-16"
-        >
-          <Speaker />
-        </div>
+
+        {/* Hero (Ready4AI + School Tour 2025 bên trong) */}
+        <section id="introduction" className="scroll-mt-24 md:scroll-mt-28">
+          <Ready4AIHero />
+        </section>
+
+        <section id="activities" className="scroll-mt-24 md:scroll-mt-28">
+          <ActivitiesSection />
+        </section>
+
+        <section id="learning" className="scroll-mt-24 md:scroll-mt-28">
+          <Seminar />
+        </section>
+
+        <section id="achievement" className="scroll-mt-24 md:scroll-mt-28">
+          <ExpoBoothExperience />
+        </section>
+        <Ready4AIFrame />
+
+        <section id="network" className="scroll-mt-24 md:scroll-mt-28">
+          <PartnersSection />
+        </section>
+
+        <section id="speakers" className="scroll-mt-24 md:scroll-mt-28">
+          <SpeakerSection />
+        </section>
+
+        <ClosingCTASection />
       </div>
-      <FooterDevplus />
     </Layout>
   );
 };
